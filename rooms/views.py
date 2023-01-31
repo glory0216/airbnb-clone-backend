@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import transaction
-from django.utils import  timezone
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK

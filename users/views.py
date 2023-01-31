@@ -4,6 +4,10 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.exceptions import ParseError, NotFound
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from reviews.models import Review
+from reviews.serializers import UserReviewSerializer, HostReviewSerializer
+from rooms.models import Room
+from rooms.serializers import HostRoomSerializer
 from . import serializers
 from .models import User
 
@@ -58,7 +62,8 @@ class PublicUser(APIView):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             raise NotFound
-        serializer = serializers.PrivateUserSerializer(user) ## public user serailizer 작성해보기
+        # serializer = serializers.PrivateUserSerializer(user) ## public user serailizer 작성해보기
+        serializer = serializers.PublicUserSerializer(user)
         return Response(serializer.data)
 
 
@@ -103,3 +108,61 @@ class Logout(APIView):
         logout(request)
         return Response({"ok": "Bye"})
 
+
+class UserReviews(APIView):
+
+    def get_object(self, username):
+        try:
+            return User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, username):
+        user = self.get_object(username)
+        reviews = Review.objects.filter(user=user)\
+            .order_by("-created_at")
+        serializer = UserReviewSerializer(
+            reviews,
+            many=True,
+        )
+        return Response(serializer.data)
+
+
+class HostRooms(APIView):
+
+    def get_object(self, username):
+        try:
+            return User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, username):
+        owner = self.get_object(username)
+        if not owner.is_host:
+            raise ParseError("Not a host")
+        rooms = Room.objects.filter(owner=owner).order_by("-created_at")
+        serializer = HostRoomSerializer(
+            rooms,
+            many=True
+        )
+        return Response(serializer.data)
+
+
+class HostReviews(APIView):
+
+    def get_object(self, username):
+        try:
+            return User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, username):
+        owner = self.get_object(username)
+        if not owner.is_host:
+            raise ParseError("Not a host")
+        reviews = Review.objects.filter(room__owner=owner).order_by("-created_at")
+        serializer = HostReviewSerializer(
+            reviews,
+            many=True
+        )
+        return Response(serializer.data)
