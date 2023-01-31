@@ -12,3 +12,4 @@ urlpatterns = [
     path("@<str:username>/rooms", views.HostRooms.as_view()),
     path("@<str:username>/rooms/reviews", views.HostReviews.as_view()),
 ]
+
